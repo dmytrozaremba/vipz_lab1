@@ -5,6 +5,7 @@
 
 #define AUTHOR_SIZE 25
 #define TITLE_SIZE 50
+#define LINE_SIZE 100
 
 typedef struct book
 {
@@ -126,10 +127,12 @@ int main(int argc, char const *argv[])
     int yearTemp, pagesTemp;
     double priceTemp;
 
-    FILE *file = fopen("books.csv", "r");
-    while (fscanf(file, "%[^,],%[^,],%d,%d,%lf\n", authorTemp, titleTemp, &yearTemp,
-                  &pagesTemp, &priceTemp) != EOF)
+    char line[LINE_SIZE];
+    while (fgets(line, sizeof line, stdin) != NULL)
     {
+        if (sscanf(line, "%[^,],%[^,],%d,%d,%lf\n", authorTemp, titleTemp, &yearTemp,
+                   &pagesTemp, &priceTemp) != 5)
+            break;
         TBook *newBook = (TBook *)malloc(sizeof(TBook));
         strcpy(newBook->author, authorTemp);
         strcpy(newBook->title, titleTemp);
@@ -148,7 +151,6 @@ int main(int argc, char const *argv[])
         }
         p = newBook;
     }
-    fclose(file);
 
     printList(list);
 
