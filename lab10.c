@@ -117,7 +117,22 @@ void printList(TBook *p)
     printf("\n");
 }
 
-int main(int argc, char const *argv[])
+void saveToFile(TBook *p)
+{
+    FILE *file = fopen("output.txt", "w");
+    fprintf(file, "%-*s | %-*s | %5s | %5s | %6s\n", AUTHOR_SIZE, "Author", TITLE_SIZE, "Title", "Year", "Pages", "Price");
+    fprintf(file, "--------------------------------------------------------------------------------------------------------\n");
+    while (p != NULL)
+    {
+        fprintf(file, "%-*s | %-*s | %5d | %5d | %6.2lf\n", AUTHOR_SIZE,
+                p->author, TITLE_SIZE, p->title, p->yearPublished,
+                p->numOfPages, p->price);
+        p = p->next;
+    }
+    fclose(file);
+}
+
+TBook *scanListFromKeyboard()
 {
     TBook *list = NULL;
     TBook *p = NULL;
@@ -127,6 +142,8 @@ int main(int argc, char const *argv[])
     int yearTemp, pagesTemp;
     double priceTemp;
 
+    printf("Enter <Author name>,<Book title>,<Year of publishing>,<Number of pages>,<Price>\n");
+    printf("To stop adding items enter any symbol\n");
     char line[LINE_SIZE];
     while (fgets(line, sizeof line, stdin) != NULL)
     {
@@ -152,13 +169,91 @@ int main(int argc, char const *argv[])
         p = newBook;
     }
 
-    printList(list);
+    return list;
+}
 
-    list = listSort(list, cmpBookAuthor);
-    printList(list);
+TBook *scanListFromFile()
+{
+    TBook *list = NULL;
+    TBook *p = NULL;
 
-    list = removeElements(list, authorStartsWithP);
-    printList(list);
+    char authorTemp[AUTHOR_SIZE];
+    char titleTemp[TITLE_SIZE];
+    int yearTemp, pagesTemp;
+    double priceTemp;
 
+    FILE *file = fopen("books.csv", "r");
+    while (fscanf(file, "%[^,],%[^,],%d,%d,%lf\n", authorTemp, titleTemp, &yearTemp,
+                  &pagesTemp, &priceTemp) != EOF)
+    {
+        TBook *newBook = (TBook *)malloc(sizeof(TBook));
+        strcpy(newBook->author, authorTemp);
+        strcpy(newBook->title, titleTemp);
+        newBook->yearPublished = yearTemp;
+        newBook->numOfPages = pagesTemp;
+        newBook->price = priceTemp;
+        newBook->next = NULL;
+
+        if (list == NULL)
+        {
+            list = newBook;
+        }
+        else
+        {
+            p->next = newBook;
+        }
+        p = newBook;
+    }
+    fclose(file);
+
+    return list;
+}
+
+int main(int argc, char const *argv[])
+{
+    TBook *list = NULL;
+    while (true)
+    {
+        printf("Enter a command:\n");
+        printf(" k - enter list from keyboard\n");
+        printf(" f - read list from a file\n");
+        printf(" p - print list\n");
+        printf(" o - output list to a file\n");
+        printf(" r - remove all items which authors starts with 'P'\n");
+        printf(" s - sort list\n");
+        printf(" any other key to exit\n");
+
+        char nextAction = getchar();
+        getchar();
+
+        if (nextAction == 'k')
+        {
+            list = scanListFromKeyboard();
+        }
+        else if (nextAction == 'f')
+        {
+            list = scanListFromFile();
+        }
+        else if (nextAction == 'p')
+        {
+            printList(list);
+        }
+        else if (nextAction == 'o')
+        {
+            saveToFile(list);
+        }
+        else if (nextAction == 'r')
+        {
+            list = removeElements(list, authorStartsWithP);
+        }
+        else if (nextAction == 's')
+        {
+            list = listSort(list, cmpBookAuthor);
+        }
+        else
+        {
+            break;
+        }
+    }
     return 0;
 }
